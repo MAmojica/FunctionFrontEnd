@@ -55,33 +55,50 @@ export default function HomePage() {
 
   const getBalance = async () => {
     if (atm) {
-      setBalance((await atm.getBalance()).toNumber());
+      const balanceBigNumber = await atm.getBalance();
+      const balanceInEth = ethers.utils.formatEther(balanceBigNumber);
+      setBalance(balanceInEth);
     }
   };
 
-  const deposit = async () => {
-    setAmount(Number(amount) < 0 ? 0 : Number(amount));
+  const handleDoubleValue = async () => {
     if (atm) {
-      let tx = await atm.deposit(amount);
-      await tx.wait();
+      const transaction = await atm.doubleValue();
+      await transaction.wait();
       getBalance();
     }
   };
 
-  const withdraw = async () => {
-    setAmount(Number(amount) < 0 ? 0 : Number(amount));
+  const handleHalveValue = async () => {
     if (atm) {
-      let tx = await atm.withdraw(amount);
-      await tx.wait();
+      const transaction = await atm.halveValue();
+      await transaction.wait();
       getBalance();
     }
   };
 
-  const clearBalance = async () => {
-    setBalance(0);
+  const handleIncrementValue = async () => {
     if (atm) {
-      let tx = await atm.withdraw(balance);
-      await tx.wait();
+      const amountInWei = ethers.utils.parseUnits(amount, "ether");
+      const transaction = await atm.incrementValue(amountInWei);
+      await transaction.wait();
+      getBalance();
+    }
+  };
+
+  const handleDecrementValue = async () => {
+    if (atm) {
+      const amountInWei = ethers.utils.parseUnits(amount, "ether");
+      const transaction = await atm.decrementValue(amountInWei);
+      await transaction.wait();
+      getBalance();
+    }
+  };
+
+  const handleTryToSetValueToZero = async () => {
+    if (atm) {
+      const transaction = await atm.tryToSetValueToZero();
+      await transaction.wait();
       getBalance();
     }
   };
@@ -122,14 +139,20 @@ export default function HomePage() {
           />
         </form>
         <div className="buttons">
-          <button className="btn" onClick={deposit}>
-            Deposit {amount} ETH
+          <button className="btn" onClick={handleIncrementValue}>
+            Increment {amount} ETH
           </button>
-          <button className="btn" onClick={withdraw}>
-            Withdraw {amount} ETH
+          <button className="btn" onClick={handleDecrementValue}>
+            Decrement {amount} ETH
           </button>
-          <button className="btn" onClick={clearBalance}>
-            Clear Balance
+          <button className="btn" onClick={handleDoubleValue}>
+            Double Value
+          </button>
+          <button className="btn" onClick={handleHalveValue}>
+            Halve Value
+          </button>
+          <button className="btn" onClick={handleTryToSetValueToZero}>
+            Set Value to Zero
           </button>
         </div>
       </div>
@@ -143,7 +166,7 @@ export default function HomePage() {
   return (
     <main className="container">
       <header>
-        <h1>Metacrafters Ethereum ATM</h1>
+        <h1>Ethereum Defi Bank</h1>
       </header>
       {initUser()}
       <style jsx>{`
