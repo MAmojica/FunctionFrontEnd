@@ -1,60 +1,67 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-//import "hardhat/console.sol";
-
 contract Assessment {
     address payable public owner;
     uint256 public balance;
-
-    event Deposit(uint256 amount);
-    event Withdraw(uint256 amount);
 
     constructor(uint initBalance) payable {
         owner = payable(msg.sender);
         balance = initBalance;
     }
 
-    function getBalance() public view returns(uint256){
+    function getBalance() public view returns (uint256) {
         return balance;
     }
 
-    function deposit(uint256 _amount) public payable {
-        uint _previousBalance = balance;
+    // // Set balance with a condition
+    // function setValue(uint256 _amount) public {
+    //     require(msg.sender == owner, "You are not the owner of this account");
+    //     require(_amount > 0, "Value must be greater than 0");
+    //     balance = _amount;
+    // }
 
-        // make sure this is the owner
+    // Double the current balance
+    function doubleValue() public {
         require(msg.sender == owner, "You are not the owner of this account");
-
-        // perform transaction
-        balance += _amount;
-
-        // assert transaction completed successfully
-        assert(balance == _previousBalance + _amount);
-
-        // emit the event
-        emit Deposit(_amount);
+        uint256 newValue = balance * 2;
+        assert(newValue > balance); // Ensure there's no overflow
+        balance = newValue;
     }
 
-    // custom error
+    // Halve the balance
+    function halveValue() public {
+        require(msg.sender == owner, "You are not the owner of this account");
+        require(balance > 1, "Balance must be greater than 1 to halve");
+        balance /= 2;
+    }
+
+    // Increment the balance by a given amount
+    function incrementValue(uint256 increment) public {
+        require(msg.sender == owner, "You are not the owner of this account");
+        require(increment > 0, "Increment must be greater than 0");
+        balance += increment;
+        assert(balance >= increment); // Ensure no overflow
+    }
+
+    // Attempt to set the balance to zero
+    function tryToSetValueToZero() public {
+        require(msg.sender == owner, "You are not the owner of this account");
+        if (balance == 0) {
+            revert("Balance is already zero");
+        }
+        balance = 0;
+    }
+
+    // Decrement the balance by a given amount
+    function decrementValue(uint256 decrement) public {
+        require(msg.sender == owner, "You are not the owner of this account");
+        require(decrement > 0, "Decrement must be greater than 0");
+        require(balance >= decrement, "Decrement exceeds current balance");
+        balance -= decrement;
+    }
+
+    // Custom error for insufficient balance
     error InsufficientBalance(uint256 balance, uint256 withdrawAmount);
 
-    function withdraw(uint256 _withdrawAmount) public {
-        require(msg.sender == owner, "You are not the owner of this account");
-        uint _previousBalance = balance;
-        if (balance < _withdrawAmount) {
-            revert InsufficientBalance({
-                balance: balance,
-                withdrawAmount: _withdrawAmount
-            });
-        }
-
-        // withdraw the given amount
-        balance -= _withdrawAmount;
-
-        // assert the balance is correct
-        assert(balance == (_previousBalance - _withdrawAmount));
-
-        // emit the event
-        emit Withdraw(_withdrawAmount);
-    }
 }
